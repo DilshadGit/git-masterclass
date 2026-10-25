@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Sample Pre-Commit Hook: Blocks accidental AWS / Private Key Commits
+set -e
+
+if git diff --cached | grep -E "(AWS_SECRET|BEGIN PRIVATE KEY|AKIA[0-9A-Z]{16})"; then
+    echo "❌ SECURITY ALERT: Uncommitted secrets detected in staged diff!"
+    exit 1
+fi
+echo "✓ Pre-commit security scan clean."
