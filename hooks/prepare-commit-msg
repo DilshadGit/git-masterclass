@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# hooks/prepare-commit-msg - Auto-prepends JIRA ticket from branch name
+# ==============================================================================
+COMMIT_MSG_FILE="$1"
+BRANCH_NAME="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
+
+# Extract ticket prefix e.g. TC-1234 from feature/TC-1234-login
+TICKET="$(echo "$BRANCH_NAME" | grep -o -E '[A-Z]{2,}-[0-9]+' || true)"
+
+if [[ -n "$TICKET" ]] && ! grep -q "$TICKET" "$COMMIT_MSG_FILE"; then
+    echo "$TICKET: $(cat "$COMMIT_MSG_FILE")" > "$COMMIT_MSG_FILE"
+fi

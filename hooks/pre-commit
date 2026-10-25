@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# hooks/pre-commit - Production Git Pre-Commit Security & Quality Guard
+# ==============================================================================
+set -euo pipefail
+
+echo "==> Running TeachCloud Pre-Commit Quality Checks..."
+
+# 1. Reject trailing whitespace
+if git diff-index --check --cached HEAD --; then
+    echo "✓ No trailing whitespace detected."
+else
+    echo "ERROR: Trailing whitespace detected in staged files. Aborting commit." >&2
+    exit 1
+fi
+
+# 2. Block secret leaks (AWS keys, private keys, passwords)
+FORBIDDEN_PATTERNS=(
+    "AKIA[0-9A-Z]{16}"
+    "BEGIN RSA PRIVATE KEY"
+    "BEGIN OPENSSH PRIVATE KEY"
+    "password\s*=\s*['"][^'"]+['"]"
+)
+
+for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+    if git diff --cached -S "$pattern" -I "" | grep -q "$pattern"; then
+        echo "SECURITY ERROR: Possible secret matching '$pattern' found in staged diff!" >&2
+        echo "Aborting commit to prevent leaking secrets." >&2
+        exit 1
+    fi
+done
+
+echo "✓ Security scans passed. Commit allowed."

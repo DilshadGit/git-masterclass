@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# hooks/commit-msg - Enforces Conventional Commits Specification
+# ==============================================================================
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+FIRST_LINE="$(head -n 1 "$COMMIT_MSG_FILE")"
+
+# Pattern: feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert: <description>
+PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_-]+\))?: .+"
+
+if [[ ! "$FIRST_LINE" =~ $PATTERN ]]; then
+    echo "ERROR: Invalid commit message format!" >&2
+    echo "Your message was: '$FIRST_LINE'" >&2
+    echo "Must adhere to Conventional Commits standard, e.g.:" >&2
+    echo "  feat(auth): add OAuth2 JWT validation" >&2
+    echo "  fix(pipeline): resolve docker build caching issue" >&2
+    exit 1
+fi
+
+echo "✓ Commit message adheres to Conventional Commits."
